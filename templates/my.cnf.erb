@@ -108,7 +108,7 @@ skip-name-resolve
 log_output = FILE
 # note: do not use "ON" here - it fails silently
 slow_query_log = 1
-slow_query_log_file        = /var/log/mysql/mysql-slow.log
+slow_query_log_file  = <%= slowlogs_logfile %>
 long_query_time=<%= long_query_time %>
 <%- else -%>
 # note: do not use "OFF" here - it fails silently
