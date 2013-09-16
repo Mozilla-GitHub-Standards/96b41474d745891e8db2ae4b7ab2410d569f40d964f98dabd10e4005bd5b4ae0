@@ -1,0 +1,136 @@
+[mysqld]
+server-id=<%= node_id %>
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+<% if server_role='slave' %>
+read_only=ON
+<% else -%>
+read_only=OFF
+<%end%>
+
+# replication and binary log settings
+<% if expire_logs_days != :undef -%>
+expire_logs_days=<%= expire_logs_days %>
+<% else -%>
+expire_logs_days=10
+<% end -%>
+
+<% if max_binlog_size != :undef -%>
+max_binlog_size=<%= max_binlog_size %>
+<% end -%>
+log-bin=/var/lib/mysql/<%= scope.lookupvar('::hostname') %>-bin
+log_slave_updates
+relay-log=/var/lib/mysql/<%= hostname %>-relay-bin
+relay-log-index=/var/lib/mysql/<%= hostname %>-relay-bin.index
+
+<% if replicate_wild_do_table != :undef -%>
+<% replicate_wild_do_table.sort.each do |value| -%>
+replicate_wild_do_table=<%= value %> <% end -%> <% end -%>
+
+<% if replicate_do_table != :undef -%>
+<% replicate_do_table.sort.each do |value| -%>
+replicate_do_table=<%= value %> <% end -%> <% end -%>
+
+<% if gtid_mode != :undef -%>
+gtid_mode=<%= gtid_mode %>
+<% end -%>
+<% if enforce_gtid_consistency != :undef -%>
+enforce_gtid_consistency=<%= enforce_gtid_consistency %>
+<% end -%>
+<% if master_info_repository != :undef -%>
+master_info_repository=<%= master_info_repository %>
+<% end -%>
+
+<% if auto_increment_offset != :undef -%>
+auto_increment_offset=<%= auto_increment_offset %>
+<% end -%>
+<% if auto_increment_increment != :undef -%>
+auto_increment_increment=<%= auto_increment_increment %>
+<% end -%>
+<% if binlog_format != :undef -%>
+binlog_format=<%= binlog_format %>
+<% end -%>
+
+# setting some standards
+skip-external-locking
+character_set_server=utf8
+<% if default_storage_engine != :undef -%>
+default_storage_engine=<%= default_storage_engine %>
+<% else -%>
+default_storage_engine=InnoDB
+<% end -%>
+
+<% if event_scheduler != :undef and event_scheduler -%>
+event_scheduler=ON
+<% end -%>
+
+<% if performance_schema == true %>performance_schema=ON<%end%>
+
+max_connections=<%= max_connections %>
+<% if max_allowed_packet != :undef -%>
+max_allowed_packet=<%= max_allowed_packet %>
+<% end -%>
+
+wait_timeout=<%= wait_timeout %>
+interactive_timeout=600
+<% if thread_cache_size != :undef -%>
+thread_cache_size=<%= thread_cache_size %>
+<% else -%>
+thread_cache_size=500
+<% end -%>
+
+# set query cache to off unless it's explicitly wanted
+<% if query_cache_size != :undef -%>
+query_cache_size=<%= query_cache_size %>
+<% else -%>
+query_cache_size=0
+<% end -%>
+<% if query_cache_type != :undef -%>
+query_cache_type=<%= query_cache_type %>
+<% else -%>
+query_cache_type=0
+<% end -%>
+<% if query_cache_limit != :undef -%>
+query_cache_limit=<%= query_cache_limit %>
+<% end -%>
+
+<% if table_open_cache != :undef -%>
+table_open_cache=<%= table_open_cache %>
+<% else -%>
+table_open_cache=3072
+<% end -%>
+
+# IP-based auth so the DB doesn't go down when DNS does.
+skip-name-resolve
+
+<% if slowlogs -%>
+# Here you can see queries with especially long duration
+log_output = FILE
+# note: do not use "ON" here - it fails silently
+slow_query_log = 1
+slow_query_log_file        = /var/log/mysql/mysql-slow.log
+long_query_time=<%= long_query_time %>
+<%- else -%>
+# note: do not use "OFF" here - it fails silently
+slow_query_log = 0
+<% end -%>
+
+# innodb settings
+<% if innodb_buffer_pool_size != :undef -%>
+innodb_buffer_pool_size=<%= innodb_buffer_pool_size %>
+<% else -%>
+innodb_buffer_pool_size=<%= (memorysize.split(' ')[0].to_i * 1024) / 2 %>M
+<% end -%>
+innodb_file_per_table
+
+<% if basedir != :undef -%>
+basedir=<%= basedir %>
+<% end -%>
+
+[mysql.server]
+user=mysql
+
+[mysqld_safe]
+log_error=/var/log/mysql/mysql.err
+pid-file=/var/run/mysqld/mysqld.pid
+
