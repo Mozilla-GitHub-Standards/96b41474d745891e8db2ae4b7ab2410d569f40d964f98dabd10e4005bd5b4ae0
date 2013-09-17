@@ -1,4 +1,4 @@
-class mysql2::server (
+class mysql::server (
     $cluster   = undef,
     $server_role    = 'slave',
     $wait_timeout = 600,
@@ -29,13 +29,13 @@ class mysql2::server (
     $enforce_gtid_consistency = undef,
     $master_info_repository = undef,
     ) {
-    include mysql2::settings
+    include mysql::settings
 
    # node_id is used for the server_id parameter in /etc/my.cnf
    # This uses a fictional function called "make_node_id".
     $node_id = make_node_id($ipaddress);
 
-    if $mysql2::settings::package_type == 'mysql56' {
+    if $mysql::settings::package_type == 'mysql56' {
         # remove mariadb repo
         file { '/etc/yum.repos.d/maridb55.repo':
             ensure => absent,
@@ -46,15 +46,15 @@ class mysql2::server (
      }
   # no need to realize Percona yumrepo for Percona versions because 
   # it's realized for the tools in the client class
-    if $mysql2::settings::package_type == "mariadb55" {
+    if $mysql::settings::package_type == "mariadb55" {
         realize(Yumrepo["mariadb55"])
     }
 
 # make sure the repos exist, otherwise realizing them will be a problem
     package {
-        $mysql2::settings::packages:
+        $mysql::settings::packages:
             ensure          => present,
-            require         => $mysql2::settings::package_type ? {
+            require         => $mysql::settings::package_type ? {
                 "mysql56"   => Yumrepo["your-mysql56-repo"],
                 "mariadb55" => Yumrepo["mariadb55"],
                 "percona55" => Yumrepo["percona"],
@@ -66,7 +66,7 @@ class mysql2::server (
 # grant global auth here - a user for all mysql servers
 # for example, a monitoring user
 # use a tool like hiera for secrets
-        mysql2::grant {
+        mysql::grant {
             'monitoring':
                 username => hiera('secrets_monitoring_mysql_username'),
                 username => hiera('secrets_monitoring_mysql_password'),
@@ -86,24 +86,23 @@ class mysql2::server (
                 unless      => "test -f /root/.my.cnf",
                 path => ["/bin", "/usr/bin", "/usr/local/bin"],
                 command     => "mysqladmin -u root password \"${password}\"",
-                require     => Service[$mysql2::settings::service_name],
-                before      => Class["mysql2::client"];
+                require     => Service[$mysql::settings::service_name],
+                before      => Class["mysql::client"];
         }
 
         class {
-            "mysql2::grant":
+            "mysql::client":
                 user        => "root",
                 password    => $password,
-                database    => "*",
         }
-        class { "mysql2::client": ;
+        class { "mysql::client": ;
           user        => "root",
           password    => $password,
         }
     }
     else {
         class {
-            "mysql2::client": ;
+            "mysql::client": ;
         }
     }
 
@@ -112,14 +111,14 @@ class mysql2::server (
     if ($slowlogs) {
         # make sure slow logs are *actually* enabled at runtime
         # if set, and if not, disable
-        mysql2::variable {
+        mysql::variable {
             'slow_query_log': value => 'ON';
             'slow_query_log_file': value => $slowlogs_logfile;
             'log_output': value => 'FILE';
             'long_query_time': value => $long_query_time;
         }
     } else {
-        mysql2::variable {
+        mysql::variable {
             'slow_query_log': value => 'OFF';
         }
     }
@@ -128,9 +127,9 @@ class mysql2::server (
         '/etc/my.cnf':
             owner => "mysql",
             group => "mysql",
-            content => template("mysql2/my.cnf.erb"),
-            require => Package[$mysql2::settings::packages],
-            before => Service[$mysql2::settings::service_name];
+            content => template("mysql/my.cnf.erb"),
+            require => Package[$mysql::settings::packages],
+            before => Service[$mysql::settings::service_name];
     }
 
     file {
@@ -140,12 +139,12 @@ class mysql2::server (
     }
 
     service {
-        $mysql2::settings::service_name:
+        $mysql::settings::service_name:
             enable => $service_enable,
             hasrestart => false,
             restart => "/bin/true",
             hasstatus => true,
-            require => Package[$mysql2::settings::packages];
+            require => Package[$mysql::settings::packages];
     }
 
     if $cluster == undef {

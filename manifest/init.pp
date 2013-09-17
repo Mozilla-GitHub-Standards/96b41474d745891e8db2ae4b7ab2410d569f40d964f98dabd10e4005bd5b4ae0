@@ -1,3 +1,3 @@
-class mysql2 {
+class mysql {
 
 }

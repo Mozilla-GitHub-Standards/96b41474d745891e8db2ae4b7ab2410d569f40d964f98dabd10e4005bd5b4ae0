@@ -1,9 +1,9 @@
-define mysql2::variable($value) {
-    include mysql2::settings
-    $service_name = $mysql2::settings::service_name
+define mysql::variable($value) {
+    include mysql::settings
+    $service_name = $mysql::settings::service_name
 
     exec {
-        "mysql2::variable::${name}":
+        "mysql::variable::${name}":
             command     => "mysql -e \"set global ${name} = ${value}\"",
             environment => ['HOME=/root'],
             path        => ["/bin", "/usr/bin", "/usr/local/bin"],

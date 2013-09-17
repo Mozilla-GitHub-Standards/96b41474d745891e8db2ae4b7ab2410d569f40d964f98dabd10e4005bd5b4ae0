@@ -1,4 +1,4 @@
-class mysql2::settings {
+class mysql::settings {
     # The node-level $mysql_package_type gives the "flavor" 
     # of MySQL installed here, and defaults to 'mysql'.  
     # We make a local variable with the default filled in
@@ -17,7 +17,7 @@ class mysql2::settings {
         "mysql56" => ["MySQL-server-5.6.12"],
         "mariadb55" => ["MariaDB-server"],
         "percona55" => ["Percona-Server-server-55"],
-        "percona51" => ["Percona-Server-server-51"], # mysql2::client gets perl-DBD-MySQL
+        "percona51" => ["Percona-Server-server-51"], # mysql::client gets perl-DBD-MySQL
         "mysql" => ["mysql-server"],
     }
 

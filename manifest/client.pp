@@ -1,13 +1,13 @@
-class mysql2::client (
+class mysql::client (
   $user     = "root",
   $password = undef,
 ) {
-  include mysql2::settings
+  include mysql::settings
 
   # we'll need this regardless, for percona-toolkit
   realize(Yumrepo["percona"])
 
-  $client_package_name = $mysql2::settings::package_type ? {
+  $client_package_name = $mysql::settings::package_type ? {
   # mysql56 shows how exact package #'s, you may not want that
     "mysql56"   => ["MySQL-client-5.6.12", "MySQL-shared-compat-5.6.12", "MySQL-shared-5.6.12"],
     "percona55" => ["Percona-Server-client-55", "Percona-Server-shared-compat"],
@@ -47,7 +47,7 @@ class mysql2::client (
     owner => "root",
     group => "root",
     replace => false,
-    content => template("mysql2/dot-my.cnf.erb"),
+    content => template("mysql/dot-my.cnf.erb"),
     require => Package[$client_package_name];
     }
   }
